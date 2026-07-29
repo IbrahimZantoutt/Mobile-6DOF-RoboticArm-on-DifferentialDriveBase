@@ -1,0 +1,5 @@
+pipeline{
+    agent{ image 'mobiarm' }
+
+
+}
