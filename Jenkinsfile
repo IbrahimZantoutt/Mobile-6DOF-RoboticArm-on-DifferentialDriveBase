@@ -3,8 +3,8 @@ pipeline{
     stages{
         stage("Build"){
             steps{
-                sh '''
-                    . /opt/ros/humble/setup.bash
+                sh '''#!/bin/bash
+                    source /opt/ros/humble/setup.bash
                     colcon build
                 '''
             }
