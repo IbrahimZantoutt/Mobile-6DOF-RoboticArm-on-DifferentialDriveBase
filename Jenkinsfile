@@ -6,10 +6,10 @@ pipeline {
     }
     stages {
         stage("see_main"){
-            agent none
+            agent any
             when{branch 'main'}
             steps{
-                sh 'echo "in main branch"'
+                sh 'echo "in $BRANCH_NAME branch"'
             }
         }
         stage("parrallel build"){
