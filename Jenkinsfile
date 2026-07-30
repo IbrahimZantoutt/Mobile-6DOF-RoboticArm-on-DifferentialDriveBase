@@ -8,7 +8,7 @@ pipeline {
         stage("parrallel build"){
             parallel{
                 stage("build") {
-                    when{expression{params.TargetStage == "build" || params.TargetStage == "both"}}
+                    when{expression{params.TargetStage in ["build", "both", "bothWithImgPush"]}}
                     agent { docker { image 'mobiarm' } }
                     steps {
                         sh '''#!/bin/bash
@@ -18,7 +18,7 @@ pipeline {
                     }
                 }
                 stage("pytest") {
-                    when{expression{params.TargetStage == "pytest" || params.TargetStage == "both"}}
+                    when{expression{params.TargetStage in ["pytest", "both", "bothWithImgPush"]}}
                     agent { docker { image 'python:3.12' } }
                     steps {
                         sh 'echo "testing python"'
