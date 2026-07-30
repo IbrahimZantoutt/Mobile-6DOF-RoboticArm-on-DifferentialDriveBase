@@ -2,13 +2,13 @@
 pipeline {
     agent none
     parameters{
-        choice(name:"TargetStage",choices:["build","pytest"],description:"choose which stage tp run")
+        choice(name:"TargetStage",choices:["build","pytest","both"],description:"choose which stage tp run")
     }
     stages {
         stage("parrallel build"){
             parallel{
                 stage("build") {
-                    when{expression{params.TargetStage == "build"}}
+                    when{expression{params.TargetStage == "build" || params.TargetStage == "both"}}
                     agent { docker { image 'mobiarm' } }
                     steps {
                         sh '''#!/bin/bash
@@ -18,7 +18,7 @@ pipeline {
                     }
                 }
                 stage("pytest") {
-                    when{expression{params.TargetStage == "pytest"}}
+                    when{expression{params.TargetStage == "pytest" || params.TargetStage == "both"}}
                     agent { docker { image 'python:3.12' } }
                     steps {
                         sh 'echo "testing python"'
