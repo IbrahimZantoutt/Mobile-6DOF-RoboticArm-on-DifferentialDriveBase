@@ -37,8 +37,8 @@ pipeline {
                 )]){
                     sh'''
                      echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                     docker tag mobiarm $DOCKER_USER/mobiarm:latest
-                     docker push $DOCKER_USER/mobiarm:latest
+                     docker tag python:3.12 $DOCKER_USER/python-test:latest
+                     docker push $DOCKER_USER/python-test:latest
                     '''
                 }
             }
