@@ -5,6 +5,13 @@ pipeline {
         choice(name:"TargetStage",choices:["build","pytest","both","bothWithImgPush"],description:"choose which stage tp run")
     }
     stages {
+        stage("see_main"){
+            agent none
+            when{branch 'main'}
+            steps{
+                sh 'echo "in main branch"'
+            }
+        }
         stage("parrallel build"){
             parallel{
                 stage("build") {
