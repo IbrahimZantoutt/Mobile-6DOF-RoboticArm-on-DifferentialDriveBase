@@ -2,7 +2,7 @@
 pipeline {
     agent none
     parameters{
-        choice(name:"TargetStage",choices:["build","pytest","both"],description:"choose which stage tp run")
+        choice(name:"TargetStage",choices:["build","pytest","both","bothWithImgPush"],description:"choose which stage tp run")
     }
     stages {
         stage("parrallel build"){
@@ -26,7 +26,24 @@ pipeline {
                 }
             }
         }
-       
+        stage("push image"){
+            when{expression{params.TargetStage == "bothWithImgPush"}}
+            agent any
+            steps{
+                withCredentials([usernamePassword(
+                    credentialsId: 'tokenDocker',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]){
+                    sh'''
+                     echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                     docker tag mobiarm $DOCKER_USER/mobiarm:latest
+                     docker push $DOCKER_USER/mobiarm:latest
+                    '''
+                }
+            }
+        }
+
     }
     post {
         always { echo "ran the pipeline" }
