@@ -1,41 +1,66 @@
 
-pipeline {
+pipeline{
     agent none
     parameters{
-        choice(name:"TargetStage",choices:["build","pytest","both","bothWithImgPush"],description:"choose which stage tp run")
+        choice(name:"ActionType", choices:["noPush","pushImage"] ,description:"choose whether to push image or not")
     }
-    stages {
-        stage("see_main"){
+    stages{
+        stage("branch print"){
             agent any
-            when{branch 'main'}
             steps{
-                sh 'echo "in $BRANCH_NAME branch"'
+                sh'echo "in branch: $BRANCH_NAME"'
             }
         }
-        stage("parrallel build"){
-            parallel{
-                stage("build") {
-                    when{expression{params.TargetStage in ["build", "both", "bothWithImgPush"]}}
-                    agent { docker { image 'mobiarm' } }
-                    steps {
-                        sh '''#!/bin/bash
-                            source /opt/ros/humble/setup.bash
-                            colcon build
-                        '''
-                    }
-                }
-                stage("pytest") {
-                    when{expression{params.TargetStage in ["pytest", "both", "bothWithImgPush"]}}
-                    agent { docker { image 'python:3.12' } }
-                    steps {
-                        sh 'echo "testing python"'
-                    }
-                }
-            }
-        }
-        stage("push image"){
-            when{expression{params.TargetStage == "bothWithImgPush"}}
+        stage("build image"){
             agent any
+            when{
+                changeset "Dockerfile"
+            }
+            options{
+                timeout(time:20,unit:"MINUTES")
+            }
+            steps{
+                sh'''
+                docker build -t mobiarm .
+                '''
+            }
+        }
+        stage("run parallel"){
+            parallel{
+                stage("ros2 stage"){
+                    agent{docker{image 'mobiarm'}}
+                    steps{
+                        sh'''
+                        #!/bin/bash
+                        source /opt/ros/humble/setup.bash
+                        colcon build
+                        ''' 
+
+                        archiveArtifacts artifacts: 'build/**', allowEmptyArchive: true
+                    }
+                }
+
+                stage("py stage"){
+                    agent{docker{image 'python:3.12'}}
+                    steps{
+                        sh'''
+                        mkdir -p report
+                        echo "python stage ran" > report/logFile.txt
+                        '''
+
+                        archiveArtifacts artifacts: "report/**", allowEmptyArchive: true
+                    }
+                }
+            }
+        }
+        stage("push stage"){
+            agent any
+            when{
+                allOf{
+                    branch 'main'
+                    expression{params.ActionType == "pushImage"}
+                }
+            }
             steps{
                 withCredentials([usernamePassword(
                     credentialsId: 'tokenDocker',
@@ -43,18 +68,25 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]){
                     sh'''
-                     echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                     docker tag python:3.12 $DOCKER_USER/python-test-pipeline:latest
-                     docker push $DOCKER_USER/python-test-pipeline:latest
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    docker tag python:3.12 $DOCKER_USER/python-test-pipeline:latest
+                    '''
+                }
+                retry(2){
+                    sh'''
+                    docker push $DOCKER_USER/python-test-pipeline:latest
                     '''
                 }
             }
+
         }
 
     }
-    post {
-        always { echo "ran the pipeline" }
-        success { echo "pipeline succeeded" }
-        failure { echo "pipeline failed" }
+    post{
+        always{echo "running pipeline"}
+        failure{echo "pipeline failed"}
+        success{echo "pipeline ran successfully"}
     }
+
+
 }
