@@ -1,3 +1,4 @@
+@Library('Global-Shared_Lib')
 
 pipeline{
     agent none
@@ -61,21 +62,18 @@ pipeline{
                 }
             }
             steps{
-                withCredentials([usernamePassword(
-                    credentialsId: 'tokenDocker',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]){
-                    sh'''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                    docker tag python:3.12 $DOCKER_USER/python-test-pipeline:latest
-                    '''
+                script{
+                    try{
+                        def tag = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+                        env.IMAGE_TAG=tag
+                        sh'exit 1'
+                    }
+                    catch (Exception e){
+                        echo "Caught exception: ${e.getMessage()}"
+                        currentBuild.result = 'UNSTABLE'
+                    }
                 }
-                retry(2){
-                    sh'''
-                    docker push $DOCKER_USER/python-test-pipeline:latest
-                    '''
-                }
+                TagPushDockerImage("mobiarm",env.IMAGE_TAG,"tokenDocker")
             }
 
         }
