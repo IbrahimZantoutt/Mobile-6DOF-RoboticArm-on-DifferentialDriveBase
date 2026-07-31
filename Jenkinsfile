@@ -30,8 +30,7 @@ pipeline{
                 stage("ros2 stage"){
                     agent{docker{image 'mobiarm'}}
                     steps{
-                        sh'''
-                        #!/bin/bash
+                        sh'''#!/bin/bash
                         source /opt/ros/humble/setup.bash
                         colcon build
                         ''' 
