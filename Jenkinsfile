@@ -1,4 +1,4 @@
-@Library('Global-Shared_Lib')
+@Library('Global-Shared_Lib') _
 
 pipeline{
     agent none
@@ -66,7 +66,7 @@ pipeline{
                     try{
                         def tag = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
                         env.IMAGE_TAG=tag
-                        sh'exit 1'
+                        // sh'exit 1'
                     }
                     catch (Exception e){
                         echo "Caught exception: ${e.getMessage()}"
