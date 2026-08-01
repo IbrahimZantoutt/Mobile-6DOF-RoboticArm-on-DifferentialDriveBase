@@ -41,41 +41,37 @@ pipeline{
                         archiveArtifacts artifacts: "build/**", allowEmptyArchive:true
                     }
                 }
-                stage("py stage"){
-                    agent{docker{image 'python:3.12'}}
-                    steps{
-                        script{
-                            try{
+                stage("py stage") {
+                    agent { docker { image 'python:3.12' } }
+                    steps {
+                        script {
+                            try {
                                 sh '''
-                                mkdir -p report
-                                cat > report/results.xml << 'EOF'
-                                <testsuite tests="2" failures="1">
-                                    <testcase name="test_one" classname="fake.tests">
-                                    </testcase>
-                                    <testcase name="test_two" classname="fake.tests">
-                                        <failure message="simulated failure">Expected true, got false</failure>
-                                    </testcase>
-                                </testsuite>
-                                EOF
-                                '''
+                mkdir -p report
+                cat > report/results.xml << 'EOF'
+                <testsuite tests="2" failures="1">
+                    <testcase name="test_one" classname="fake.tests">
+                    </testcase>
+                    <testcase name="test_two" classname="fake.tests">
+                        <failure message="simulated failure">Expected true, got false</failure>
+                    </testcase>
+                </testsuite>
+                EOF
+                '''
                             }
-                            catch (Exception e){
+                            catch (Exception e) {
                                 echo "caught exception while writing file: ${e.getMessage()}"
                                 currentBuild.result = "UNSTABLE"
                             }
                         }
-                        
                         junit "report/results.xml"
-
-                        archiveArtifacts artifacts: "report/**", allowEmptyArchive:true
-
-                        script{
+                        archiveArtifacts artifacts: "report/**", allowEmptyArchive: true
+                        script {
                             def map = [vision_node: true, arm_controller: false, nav_stack: true]
-                            def mapFilt = map.findAll{key,value -> value == true}
-                            echo mapFilt
+                            def mapFilt = map.findAll { key, value -> value == true }
+                            echo mapFilt.toString()
                         }
                     }
-
                 }
             }
         }
