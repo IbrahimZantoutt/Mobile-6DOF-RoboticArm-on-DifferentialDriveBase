@@ -47,20 +47,14 @@ pipeline{
                         script {
                             try {
                                 sh '''
-                mkdir -p report
-                cat > report/results.xml << 'EOF'
-                <testsuite tests="2" failures="1">
-                    <testcase name="test_one" classname="fake.tests">
-                    </testcase>
-                    <testcase name="test_two" classname="fake.tests">
-                        <failure message="simulated failure">Expected true, got false</failure>
-                    </testcase>
-                </testsuite>
-                EOF
-                '''
+                                rm -rf report
+                                mkdir -p report
+                                pip install pytest --break-system-packages
+                                pytest tests/ --junitxml=report/results.xml
+                                '''
                             }
                             catch (Exception e) {
-                                echo "caught exception while writing file: ${e.getMessage()}"
+                                echo "caught exception while running tests: ${e.getMessage()}"
                                 currentBuild.result = "UNSTABLE"
                             }
                         }
