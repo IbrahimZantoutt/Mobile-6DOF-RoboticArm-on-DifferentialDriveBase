@@ -19,7 +19,10 @@ pipeline{
         stage("build image"){
             agent any
             when{
-                changeset 'Dockerfile'
+                allOf{
+                    changeset 'Dockerfile';
+                    expression{params.ActionType == "push"}
+                }
             }
             options{
                 timeout(time:20,unit:"MINUTES")
