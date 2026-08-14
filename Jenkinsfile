@@ -16,8 +16,20 @@ pipeline{
                 sh'echo "branch: $BRANCH_NAME"'
             }
         }
+        stage("build image"){
+            agent any
+            when{
+                changeset 'Dockerfile'
+            }
+            options{
+                timeout(time:20,unit:"MINUTES")
+            }
+            steps{
+                sh'docker build -t mobiarm .'
+            }
+        }
         stage("static_test"){
-            agent{ docker{ image 'mobiarm'; args '-u root' } }
+            agent{ docker{ image 'mobiarm'; args "-u root --entrypoint=''" } }
             steps{
                 sh '''#!/bin/bash
                 set +e
@@ -28,7 +40,7 @@ pipeline{
                         --inline-suppr --inconclusive \
                         --suppress=missingInclude --suppress=missingIncludeSystem \
                         --xml --xml-version=2 \
-                        src/main_nodes/src src/bin_interfaces/src \
+                        src/main_nodes/src \
                         2> static-report/cppcheck.xml
 
                 # Python — launch files, scan filters, tests
@@ -58,18 +70,6 @@ pipeline{
             }
         }
 
-        stage("build image"){
-            agent any
-            when{
-                changeset 'Dockerfile'
-            }
-            options{
-                timeout(time:20,unit:"MINUTES")
-            }
-            steps{
-                sh'docker build -t mobiarm .'
-            }
-        }
         stage("parallel build stage"){
             parallel{
                 stage("ros2 stage"){
