@@ -129,7 +129,11 @@ pipeline{
     }
     post{
         always{echo "running pipeline"}
-        failure{echo "pipeline failure"}
-        success{echo "pipeline success"}
+        failure{
+            slackSend(channel: '#ci-builds', color: 'danger', message: "Build failed in ${env.JOB_NAME} - ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+        }
+        success{
+            slackSend(channel: '#ci-builds', color: 'good', message: "Build succeeded in ${env.JOB_NAME} - ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+        }
     }
 }
