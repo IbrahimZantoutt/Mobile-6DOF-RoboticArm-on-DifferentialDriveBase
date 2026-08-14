@@ -70,12 +70,6 @@ pipeline{
                 sh'docker build -t mobiarm .'
             }
         }
-        stage("static_test"){
-            agent any
-            steps{
-
-            }
-        }
         stage("parallel build stage"){
             parallel{
                 stage("ros2 stage"){
